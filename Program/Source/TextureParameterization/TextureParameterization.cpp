@@ -278,8 +278,7 @@ void RenderMeshWindow()
 		drawPickingFaceShader.Enable();
 		drawPickingFaceShader.SetMVMat(value_ptr(mvMat));
 		drawPickingFaceShader.SetPMat(value_ptr(pMat));
-		if (model.GetSelectedVertexSize() == 0)
-			model.RenderSelectedFace();
+		model.RenderSelectedFace();
 		drawPickingFaceShader.Disable();
 	}
 

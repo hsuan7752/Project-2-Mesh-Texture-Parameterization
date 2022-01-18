@@ -173,6 +173,120 @@ void GLMesh::LoadToShader()
 	glBindVertexArray(0);
 }
 
+void GLMesh::LoadToShader(GLuint& _vao, GLuint& _ebo, GLuint& _vboVertices, GLuint& _vboNormal, GLuint& _vboTexcoord)
+{
+	std::vector<MyMesh::Point> vertices;
+	vertices.reserve(mesh.n_vertices());
+	for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+	{
+		vertices.push_back(mesh.point(*v_it));
+		//cout<<"Point: "<< *v_it << endl;
+		MyMesh::Point p = mesh.point(*v_it);
+	}
+
+	std::vector<MyMesh::Normal> normals;
+	normals.reserve(mesh.n_vertices());
+	for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+	{
+		normals.push_back(mesh.normal(*v_it));
+	}
+
+	std::vector<MyMesh::TexCoord2D> texcoods;
+	if (TexCoord)
+	{
+		texcoods.reserve(mesh.n_vertices());
+		for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
+		{
+			MyMesh::TexCoord2D Mytex = mesh.texcoord2D(*v_it);
+			texcoods.push_back(Mytex);
+		}
+	}
+
+	std::vector<unsigned int> indices;
+	indices.reserve(mesh.n_faces() * 3);
+	for (MyMesh::FaceIter f_it = mesh.faces_begin(); f_it != mesh.faces_end(); ++f_it)
+	{
+		//cout << "Face: " << *f_it << endl;
+		for (MyMesh::FaceVertexIter fv_it = mesh.fv_iter(*f_it); fv_it.is_valid(); ++fv_it)
+		{
+			indices.push_back(fv_it->idx());
+		}
+	}
+	
+	glGenVertexArrays(1, &vaotest);
+	glBindVertexArray(vaotest);
+
+	glGenBuffers(1, &vbo1);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo1);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &vbo2);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo2);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Normal) * normals.size(), &normals[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	if (TexCoord)
+	{
+		glGenBuffers(1, &vbotex);
+		glBindBuffer(GL_ARRAY_BUFFER, vbotex);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::TexCoord2D) * texcoods.size(), &texcoods[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+	}
+
+	glGenBuffers(1, &ebotest);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebotest);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), &indices[0], GL_STATIC_DRAW);
+
+	/*glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	glGenBuffers(1, &vboVertices);
+	glBindBuffer(GL_ARRAY_BUFFER, vboVertices);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Point) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(0);
+
+	glGenBuffers(1, &vboNormal);
+	glBindBuffer(GL_ARRAY_BUFFER, vboNormal);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::Normal) * normals.size(), &normals[0], GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glEnableVertexAttribArray(1);
+
+	if (TexCoord)
+	{
+		glGenBuffers(1, &vboTexcoord);
+		glBindBuffer(GL_ARRAY_BUFFER, vboTexcoord);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::TexCoord2D) * texcoods.size(), &texcoods[0], GL_STATIC_DRAW);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(2);
+	}
+
+	glGenBuffers(1, &ebo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(), &indices[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);*/
+
+	_vao = vaotest;
+	_ebo = ebotest;
+	_vboVertices = vbo1;
+	_vboNormal = vbo2;
+	_vboTexcoord = vbotex;
+	//cout << "vao in loadtoshader: " << &vao << endl;
+}
+
+void GLMesh::SaveToVector(unsigned int textureID, MyMesh mesh)
+{
+
+}
+
 #pragma endregion
 
 MeshObject::MeshObject()
@@ -195,6 +309,7 @@ void MeshObject::Render()
 {
 	glBindVertexArray(model.vao);
 	glDrawElements(GL_TRIANGLES, model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+
 	glBindVertexArray(0);
 }
 
@@ -241,6 +356,11 @@ bool MeshObject::AddSelectedVertex(unsigned int vertexID)
 		return true;
 	}
 	return false;
+}
+
+bool MeshObject::DeleteSelectedVertex(unsigned int vertexID)
+{
+	selectedVertex.erase(std::remove(selectedVertex.begin(), selectedVertex.end(), vertexID), selectedVertex.end());
 }
 
 bool MeshObject::FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::vec3& closestPos)
@@ -314,11 +434,6 @@ unsigned int MeshObject::GetSelectedVertexID(unsigned int index)
 	return selectedVertex[index];
 }
 
-GLMesh MeshObject::GetModel()
-{
-	return model;
-}
-
 void MeshObject::FaceToVertex()
 {
 	int j = 0;
@@ -364,4 +479,22 @@ void MeshObject::ClearSelectedVertex()
 void MeshObject::ClearVertexSequence()
 {
 	vertexSequence.clear();
+}
+
+TEXTURE::TEXTURE(unsigned int _texture_id, MeshObject _mesh)
+{
+	this->texture_id = _texture_id;
+	this->mesh = _mesh;
+	_mesh.model.LoadToShader(vao, ebo, vboVertices, vboNormal, vboTexcoord);
+}
+
+TEXTURE::TEXTURE(unsigned int _texture_id, MeshObject _mesh, GLuint _vao, GLuint _ebo, GLuint _vboVertices, GLuint _vboNormal, GLuint _vboTexcoord)
+{
+	this->texture_id = _texture_id;
+	this->mesh = _mesh;
+	this->vao = _vao;
+	this->ebo = _ebo;
+	this->vboVertices = _vboVertices;
+	this->vboNormal = _vboNormal;
+	this->vboTexcoord = _vboTexcoord;
 }

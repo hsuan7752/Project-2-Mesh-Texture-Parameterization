@@ -11,6 +11,7 @@
 #include "DrawPickingFaceShader.h"
 #include "DrawTextureShader.h"
 #include "DrawPointShader.h"
+#include "SaveTexture.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../../Include/STB/stb_image.h"
@@ -36,9 +37,8 @@ mat4			proj_matrix;		// projection matrix
 float			aspect;
 ViewManager		meshWindowCam;
 
-vector < MeshObject > textures;
-
 MeshObject model;
+//static MeshObject SelectedModel;
 MeshObject SelectedModel;
 
 // shaders
@@ -50,7 +50,7 @@ DrawPointShader drawPointShader;
 
 // vbo for drawing point
 GLuint vboPoint;
-
+void RenderAllTextures();
 int mainWindow;
 enum SelectionMode
 {
@@ -78,11 +78,7 @@ TwType SelectionTexType;
 unsigned int textureID;
 static float textureU = 0, textureV = 0, textureR = 0;
 
-class TEXTURE
-{
-	unsigned int texture_id = 0;
-
-};
+vector < TEXTURE > textures;
 
 void SetupGUI()
 {
@@ -175,7 +171,7 @@ void InitData()
 {
 	ResourcePath::shaderPath = "./Shader/" + ProjectName + "/";
 	//ResourcePath::imagePath = "./Imgs/TextureParameterization/checkerboard4.jpg";
-	ResourcePath::modelPath = "./Model/armadillo.obj";
+	ResourcePath::modelPath = "./Model/UnionSphere.obj";
 
 	//Initialize shaders
 	///////////////////////////	
@@ -253,7 +249,8 @@ void RenderMeshWindow()
 
 	model.Render();
 
-	if (model.GetSelectedVertexSize() > 0)
+	//if (model.GetSelectedVertexSize() > 0)
+	if(SelectedModel.model.mesh.n_faces() != 0)
 	{
 		drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 		drawModelShader.SetFaceColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
@@ -265,7 +262,9 @@ void RenderMeshWindow()
 		drawModelShader.DrawTexture(true);
 		drawModelShader.DrawWireframe(false);
 		drawModelShader.SetTexcoord(textureU, textureV, textureR);
-		SelectedModel.Render();
+		//SelectedModel.Render();
+		RenderAllTextures();
+		//cout << "test: " << SelectedModel.model.mesh.n_faces() << endl;
 		drawModelShader.DrawTexture(false);
 		drawModelShader.DrawWireframe(true);
 	}
@@ -278,8 +277,24 @@ void RenderMeshWindow()
 		drawPickingFaceShader.Enable();
 		drawPickingFaceShader.SetMVMat(value_ptr(mvMat));
 		drawPickingFaceShader.SetPMat(value_ptr(pMat));
-		model.RenderSelectedFace();
+		if (model.GetSelectedVertexSize() == 0)
+			model.RenderSelectedFace();
 		drawPickingFaceShader.Disable();
+
+		//drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		//drawModelShader.SetFaceColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+		//
+		//drawModelShader.DrawTexCoord(true);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, textureID);
+		//
+		//drawModelShader.DrawTexture(true);
+		//drawModelShader.DrawWireframe(false);
+		//drawModelShader.SetTexcoord(textureU, textureV, textureR);
+		//SelectedModel.Render();
+		//cout << "test: " << SelectedModel.model.mesh.n_faces() << endl;
+		//drawModelShader.DrawTexture(false);
+		//drawModelShader.DrawWireframe(true);
 	}
 
 	glUseProgram(0);
@@ -526,6 +541,7 @@ void Texture()
 	for (int i = 0; i < model.GetSelectedVertexSize(); ++i)
 	{
 		MyMesh::VertexHandle vertex_handle = model.model.mesh.vertex_handle(model.GetSelectedVertexID(i));
+		cout << "Veretx handle: " << vertex_handle << endl;
 		MyMesh::Point p = model.model.mesh.point(vertex_handle);
 
 		vHandle.push_back(SelectedModel.model.mesh.add_vertex(p));
@@ -754,6 +770,18 @@ void delete_Texture()
 	SelectedModel.model.mesh.ClearMesh();
 }
 
+
+void RenderAllTextures()
+{
+	for (int i = 0; i < textures.size(); ++i)
+	{
+		glBindVertexArray(textures[i].vao);
+		//cout << "render vao: " << &textures[i].vao << endl;
+		glDrawElements(GL_TRIANGLES, textures[i].mesh.model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+	}	
+}
+
 //Keyboard event
 void MyKeyboard(unsigned char key, int x, int y)
 {
@@ -766,10 +794,21 @@ void MyKeyboard(unsigned char key, int x, int y)
 	{
 		SelectedModel.model.mesh.clear();
 		SelectedModel.model.mesh.ClearMesh();
+		//cout << "Mesh face: " << SelectedModel.model.mesh.n_faces() << endl;
 		Texture();
-		//textures.push_back(SelectedModel);
+		TEXTURE tmp(textureID, SelectedModel);
+		textures.push_back(tmp);
+		//model.model.SaveToVector(textureID, SelectedModel.model.mesh);
 		model.ClearSelectedFace();
-		
+		model.ClearSelectedVertex();
+		model.ClearVertexSequence();
+		//RenderAllTextures();
+
+		cout << textures.size() << endl;
+		cout << textures[textures.size() - 1].vao << endl;
+		for (int i = 0; i < textures.size(); ++i) {
+			cout << "Face Count: " << textures[i].mesh.model.mesh.n_faces() << endl;
+		}
 	}
 
 	if (key == 'g')

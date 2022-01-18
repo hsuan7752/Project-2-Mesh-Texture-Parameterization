@@ -4,6 +4,7 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <Common.h>
+#include "SaveTexture.h"
 
 typedef OpenMesh::TriMesh_ArrayKernelT<>  TriMesh;
 
@@ -31,10 +32,16 @@ public:
 	GLuint ebo;
 	GLuint vboVertices, vboNormal, vboTexcoord;
 
+	GLuint vaotest, vbo1, vbo2, vbotex, ebotest;
+	vector<GLuint> vaovector;
+
+	void SaveToVector(unsigned int textureID, MyMesh mesh);
+
 //private:
 
 	bool LoadModel(std::string fileName);
 	void LoadToShader();
+	void LoadToShader(GLuint &_vao, GLuint &_ebo, GLuint &_vboVertices, GLuint &_vboNormal, GLuint &_vboTexcoord);
 	bool TexCoord = false;
 };
 
@@ -46,10 +53,12 @@ public:
 
 	bool Init(std::string fileName);
 	void Render();
+	
 	void RenderSelectedFace();
 	bool AddSelectedFace(unsigned int faceID);
 	void DeleteSelectedFace(unsigned int faceID);
 	bool AddSelectedVertex(unsigned int vertexID);
+	bool DeleteSelectedVertex(unsigned int vertexID);
 	bool FindClosestPoint(unsigned int faceID, glm::vec3 worldPos, glm::vec3& closestPos);
 
 	unsigned int GetSelectedFaceSize();
@@ -62,8 +71,6 @@ public:
 
 	unsigned int GetSelectedFaceID(unsigned int index);
 	unsigned int GetSelectedVertexID(unsigned int index);
-
-	GLMesh GetModel();
 	void FaceToVertex();
 
 	void ClearSelectedFace();
@@ -79,5 +86,19 @@ private:
 	std::vector<unsigned int*> fvIDsPtr;
 	std::vector<int> elemCount;
 
+};
+
+class TEXTURE
+{
+public:
+	TEXTURE() {}
+	TEXTURE(unsigned int _texture_id, MeshObject _mesh);
+	TEXTURE(unsigned int _texture_id, MeshObject _mesh, GLuint _vao, GLuint _ebo, GLuint _vboVertices, GLuint _vboNormal, GLuint _vboTexcoord);
+	unsigned int texture_id = 0;
+
+	MeshObject mesh;
+	GLuint vao;
+	GLuint ebo;
+	GLuint vboVertices, vboNormal, vboTexcoord;
 };
 

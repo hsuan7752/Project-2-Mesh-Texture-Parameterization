@@ -123,6 +123,7 @@
     <ClCompile Include="..\..\Source\TextureParameterization\OpenMesh.cpp" />
     <ClCompile Include="..\..\Source\TextureParameterization\PickingShader.cpp" />
     <ClCompile Include="..\..\Source\TextureParameterization\PickingTexture.cpp" />
+    <ClCompile Include="..\..\Source\TextureParameterization\SaveTexture.cpp" />
     <ClCompile Include="..\..\Source\TextureParameterization\TextureParameterization.cpp" />
     <ClCompile Include="..\..\Source\TextureParameterization\MeshObject.cpp" />
     <ClCompile Include="..\..\Source\tiny_obj_loader.cpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="..\..\Source\TextureParameterization\PickingTexture.h" />
     <ClInclude Include="..\..\Source\TextureParameterization\MeshObject.h" />
     <ClInclude Include="..\..\Source\TextureParameterization\OpenMesh.h" />
+    <ClInclude Include="..\..\Source\TextureParameterization\SaveTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Assets\Shader\TextureParameterization\drawModel.fs.glsl" />

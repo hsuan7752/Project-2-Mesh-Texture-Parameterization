@@ -498,3 +498,15 @@ TEXTURE::TEXTURE(unsigned int _texture_id, MeshObject _mesh, GLuint _vao, GLuint
 	this->vboNormal = _vboNormal;
 	this->vboTexcoord = _vboTexcoord;
 }
+
+void TEXTURE::add(unsigned int _texture_id, MeshObject _mesh)
+{
+	this->texture_id = _texture_id;
+	this->mesh = _mesh;
+	_mesh.model.LoadToShader(vao, ebo, vboVertices, vboNormal, vboTexcoord);
+}
+
+TEXTURE::TEXTURE(unsigned int _texture_id, std::vector<unsigned int> _vertices_ids)
+{
+	this->texture_id = _texture_id;
+}

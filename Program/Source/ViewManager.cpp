@@ -257,7 +257,7 @@ void ViewManager::mouseMoveEvent(int x,int y)
 */
 void ViewManager::wheelEvent(int direction)
 {
-	wheel_val = direction * 15.0f;
+	wheel_val = direction * 15.0f * 10.0f;
     Zoom(wheel_val / 120.0f);
 }
 
@@ -268,7 +268,7 @@ void ViewManager::wheelEvent(int direction)
 void ViewManager::Zoom(float distance)
 {
     zoom *= (1.0f + 0.05f * distance);
-    zoom = clamp(0.1f, zoom, 3.0f);
+    zoom = clamp(0.01f, zoom, 3.0f);
 }
 
 /**

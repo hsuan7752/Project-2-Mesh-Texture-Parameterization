@@ -4,7 +4,6 @@
 #include <OpenMesh/Core/IO/MeshIO.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <Common.h>
-#include "SaveTexture.h"
 
 typedef OpenMesh::TriMesh_ArrayKernelT<>  TriMesh;
 
@@ -16,6 +15,7 @@ public:
 
 	int FindVertex(MyMesh::Point pointToFind);
 	void ClearMesh();
+	std::vector<unsigned int> ids;
 };
 
 class GLMesh
@@ -33,7 +33,6 @@ public:
 	GLuint vboVertices, vboNormal, vboTexcoord;
 
 	GLuint vaotest, vbo1, vbo2, vbotex, ebotest;
-	vector<GLuint> vaovector;
 
 	void SaveToVector(unsigned int textureID, MyMesh mesh);
 
@@ -49,7 +48,7 @@ class MeshObject
 {
 public:
 	MeshObject();
-	~MeshObject();
+	~MeshObject();	
 
 	bool Init(std::string fileName);
 	void Render();
@@ -79,7 +78,8 @@ public:
 
 	std::vector<unsigned int> vertexSequence;
 
-	GLMesh model;	
+	GLMesh model;
+
 private:	
 	std::vector<unsigned int> selectedFace;
 	std::vector<unsigned int> selectedVertex;
@@ -94,6 +94,8 @@ public:
 	TEXTURE() {}
 	TEXTURE(unsigned int _texture_id, MeshObject _mesh);
 	TEXTURE(unsigned int _texture_id, MeshObject _mesh, GLuint _vao, GLuint _ebo, GLuint _vboVertices, GLuint _vboNormal, GLuint _vboTexcoord);
+	TEXTURE(unsigned int _texture_id, std::vector<unsigned int> _vertices_ids);
+	void add(unsigned int _texture_id, MeshObject _mesh);
 	unsigned int texture_id = 0;
 
 	MeshObject mesh;

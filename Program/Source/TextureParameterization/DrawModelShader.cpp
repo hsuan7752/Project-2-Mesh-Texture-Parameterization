@@ -38,6 +38,15 @@ bool DrawModelShader::Init()
 		return false;
 	}
 
+	//TexcoordX = GetUniformLocation("TexcoordX");
+	//TexcoordY = GetUniformLocation("TexcoordY");
+	//TexcoordR = GetUniformLocation("TexcoordR");
+	//if (TexcoordX == -1)
+	//{
+	//	puts("Get uniform loaction error: TexcoordX");
+	//	return false;
+	//}
+
 	um4mvLocation = GetUniformLocation("um4mv");
 	if (um4mvLocation == -1)
 	{
@@ -168,4 +177,6 @@ void DrawModelShader::SetTexcoord(const float& Tx, const float& Ty, const float&
 	glUniform1f(TexcoordX, Tx);
 	glUniform1f(TexcoordY, Ty);
 	glUniform1f(TexcoordR, R);
+	//std::cout << "TexcoordX: " << TexcoordX << " TexcoordY: " << TexcoordY << " TexcoordR: " << TexcoordR << std::endl;
+	//std::cout << "TX: " << Tx << " TY: " << Ty << " TR: " << R << std::endl;
 }

@@ -16,6 +16,9 @@ uniform bool drawWireframe;
 uniform bool drawTexture;
 uniform vec4 faceColor;
 uniform vec4 wireColor;
+uniform float TexcoordX;
+uniform float TexcoordY;
+uniform float TexcoordR;
 
 float edgeFactor()
 {

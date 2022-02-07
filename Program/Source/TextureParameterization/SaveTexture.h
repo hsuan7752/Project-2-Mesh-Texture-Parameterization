@@ -4,19 +4,34 @@
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <Common.h>
 
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include "json.hpp"
 #include "MeshObject.h"
 
+using json = nlohmann::json;
 using namespace std;
 
-//class TEXTURE
-//{
-//public:
-//	TEXTURE() {}
-//	TEXTURE(unsigned int _texture_id, MeshObject _mesh, GLuint _vao, GLuint _ebo, GLuint _vboVertices, GLuint _vboNormal, GLuint _vboTexcoord) {}
-//	unsigned int texture_id = 0;
-//	
-//	MeshObject mesh;
-//	GLuint vao;
-//	GLuint ebo;
-//	GLuint vboVertices, vboNormal, vboTexcoord;
-//};
+class JSON
+{
+public:
+	JSON() {}
+	JSON(unsigned int textureID, size_t mesh_n, MyMesh mesh);
+	json getJson();
+	
+private:
+	json j;
+};
+
+class DataBase
+{
+public:
+	void AddData(unsigned int textureID, size_t mesh_n, MyMesh mesh);
+	void Clear();
+	void SaveJSON();
+	void LoadJSON();
+private:
+	vector < JSON > datas;
+};

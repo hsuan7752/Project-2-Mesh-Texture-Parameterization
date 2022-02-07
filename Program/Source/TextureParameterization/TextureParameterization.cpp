@@ -38,8 +38,8 @@ float			aspect;
 ViewManager		meshWindowCam;
 
 MeshObject model;
-//static MeshObject SelectedModel;
 MeshObject SelectedModel;
+DataBase file;
 
 // shaders
 DrawModelShader drawModelShader;
@@ -62,23 +62,30 @@ enum SelectionMode
 
 enum SelectionTexture
 {
-	CHECKERBOARD4,
-	NONE
+	TIGER,
+	CHEETAH,
+	BRICK,
+	BLUE,
+	NTUST,
+	CHECKERBOARD,
+	BRICK2
 };
 
 SelectionMode selectionMode = ADD_FACE;
-SelectionTexture selectionTex = CHECKERBOARD4;
+SelectionTexture selectionTex = TIGER;
 
 TwBar* bar;
 TwEnumVal SelectionModeEV[] = { {ADD_FACE, "Add face"}, {DEL_FACE, "Delete face"}, {SELECT_POINT, "Point"}, {ADD_RING, "Add ring"}};
-TwEnumVal SelectionTexEV[] = { {CHECKERBOARD4, "Checkboard4"}, {NONE, "None"}};
+TwEnumVal SelectionTexEV[] = { {TIGER, "Texture1"}, {CHEETAH, "Texture2"},  {BRICK, "Texture3"}, {BLUE, "Texture4"}, {NTUST, "Texture5"}, {CHECKERBOARD, "Texture6"}, {BRICK2, "Texture7"} };
 TwType SelectionModeType;
 TwType SelectionTexType;
 
-unsigned int textureID;
-static float textureU = 0, textureV = 0, textureR = 0;
+vector <unsigned int> textureID;
+float TexcoordX = 0, TexcoordY = 0, TexcoordR = 0, TexcoordS = 1.0;
 
 vector < TEXTURE > textures;
+
+#define PI 3.1415936
 
 void SetupGUI()
 {
@@ -97,7 +104,7 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	SelectionTexType = TwDefineEnum("SelectionTexType", SelectionTexEV, 2);
+	SelectionTexType = TwDefineEnum("SelectionTexType", SelectionTexEV, 7);
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionTexType", SelectionTexType, &selectionTex, NULL);
 }
@@ -171,7 +178,7 @@ void InitData()
 {
 	ResourcePath::shaderPath = "./Shader/" + ProjectName + "/";
 	//ResourcePath::imagePath = "./Imgs/TextureParameterization/checkerboard4.jpg";
-	ResourcePath::modelPath = "./Model/UnionSphere.obj";
+	ResourcePath::modelPath = "./Model/armadillo.obj";
 
 	//Initialize shaders
 	///////////////////////////	
@@ -186,7 +193,13 @@ void InitData()
 	//Load model to shader program
 	My_LoadModel();
 
-	textureID = My_LoadTexture("Imgs\\TextureParameterization\\checkerboard4.jpg", GL_RGB);
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\tiger.png", GL_RGB));
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\cheetah.jfif", GL_RGB));
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\brick.jfif", GL_RGB));
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\images.jfif", GL_RGB));
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\NTUST.jpg", GL_RGB));
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\checkerboard4.jpg", GL_RGB));
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\brick.jpg", GL_RGB));
 }
 
 void Reshape(int width, int height)
@@ -235,13 +248,16 @@ void RenderMeshWindow()
 	drawModelShader.Enable();
 	glm::mat3 normalMat = glm::transpose(glm::inverse(glm::mat3(mvMat)));
 	glm::mat4 trans = glm::mat4(1.0f);
-	trans = glm::rotate(trans, glm::radians(0.0f), glm::vec3(0.0, 0.0, 1.0));
-	//trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+	trans = glm::rotate(trans, glm::radians(TexcoordR * 10), glm::vec3(0.0, 0.0, 1.0));
+	trans = glm::translate(trans, glm::vec3(TexcoordX, 0, 0));
+	trans = glm::translate(trans, glm::vec3(0, TexcoordY, 0));
+	trans = glm::scale(trans, glm::vec3(TexcoordS, TexcoordS, TexcoordS));
 
 	drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
 	drawModelShader.SetFaceColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 	drawModelShader.UseLighting(true);
 	drawModelShader.DrawWireframe(true);
+	drawModelShader.SetTexcoord(0, 0, 0);
 	drawModelShader.SetNormalMat(normalMat);
 	drawModelShader.SetMVMat(mvMat);
 	drawModelShader.SetPMat(pMat);
@@ -249,24 +265,26 @@ void RenderMeshWindow()
 
 	model.Render();
 
-	//if (model.GetSelectedVertexSize() > 0)
-	if(SelectedModel.model.mesh.n_faces() != 0)
+	for (int i = 0; i < textures.size(); ++i)
 	{
 		drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 		drawModelShader.SetFaceColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
 	
-		drawModelShader.DrawTexCoord(true);
+		drawModelShader.DrawTexCoord(false);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textureID);
+		glBindTexture(GL_TEXTURE_2D, textures[i].texture_id);
 	
 		drawModelShader.DrawTexture(true);
 		drawModelShader.DrawWireframe(false);
-		drawModelShader.SetTexcoord(textureU, textureV, textureR);
-		//SelectedModel.Render();
-		RenderAllTextures();
-		//cout << "test: " << SelectedModel.model.mesh.n_faces() << endl;
+		//cout << "TextureU: " << TexcoordX << " TextureV: " << textureV << " TexRotate: " << textureR << endl;
+		//drawModelShader.SetTexcoord(TexcoordX, textureV, 0);
+		glBindVertexArray(textures[i].vao);
+		glDrawElements(GL_TRIANGLES, textures[i].mesh.model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
 		drawModelShader.DrawTexture(false);
-		drawModelShader.DrawWireframe(true);
+		//drawModelShader.SetUVRotMat(trans);
+		//cout << trans[0][0] << endl;
+		//drawModelShader.DrawWireframe(true);
 	}
 
 	drawModelShader.Disable();
@@ -280,21 +298,6 @@ void RenderMeshWindow()
 		if (model.GetSelectedVertexSize() == 0)
 			model.RenderSelectedFace();
 		drawPickingFaceShader.Disable();
-
-		//drawModelShader.SetWireColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-		//drawModelShader.SetFaceColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-		//
-		//drawModelShader.DrawTexCoord(true);
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, textureID);
-		//
-		//drawModelShader.DrawTexture(true);
-		//drawModelShader.DrawWireframe(false);
-		//drawModelShader.SetTexcoord(textureU, textureV, textureR);
-		//SelectedModel.Render();
-		//cout << "test: " << SelectedModel.model.mesh.n_faces() << endl;
-		//drawModelShader.DrawTexture(false);
-		//drawModelShader.DrawWireframe(true);
 	}
 
 	glUseProgram(0);
@@ -367,28 +370,28 @@ void RenderMeshWindow()
 
 	}
 
-	glBindTexture(GL_TEXTURE_2D, textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID[selectionTex]);
 	glColor3f(1, 1, 1);
 	glBegin(GL_QUADS);
 	float tempx = -0.5;
 	float tempy = 0.5;
-	float Nx = cos(-textureR) * tempx - sin(-textureR) * tempy + 0.5 - textureU;
-	float Ny = sin(-textureR) * tempx + cos(-textureR) * tempy + 0.5 + textureV;
+	float Nx = cos(-TexcoordR) * tempx - sin(-TexcoordR) * tempy + 0.5 - TexcoordX;
+	float Ny = sin(-TexcoordR) * tempx + cos(-TexcoordR) * tempy + 0.5 + TexcoordY;
 	glTexCoord2d(Nx, Ny); glVertex2d(0, -1);
 	tempx = 1 - 0.5;
 	tempy = 1 - 0.5;
-	Nx = cos(-textureR) * tempx - sin(-textureR) * tempy + 0.5 - textureU;
-	Ny = sin(-textureR) * tempx + cos(-textureR) * tempy + 0.5 + textureV;
+	Nx = cos(-TexcoordR) * tempx - sin(-TexcoordR) * tempy + 0.5 - TexcoordX;
+	Ny = sin(-TexcoordR) * tempx + cos(-TexcoordR) * tempy + 0.5 + TexcoordY;
 	glTexCoord2d(Nx, Ny); glVertex2d(1, -1);
 	tempx = 1 - 0.5;
 	tempy = 0 - 0.5;
-	Nx = cos(-textureR) * tempx - sin(-textureR) * tempy + 0.5 - textureU;
-	Ny = sin(-textureR) * tempx + cos(-textureR) * tempy + 0.5 + textureV;
+	Nx = cos(-TexcoordR) * tempx - sin(-TexcoordR) * tempy + 0.5 - TexcoordX;
+	Ny = sin(-TexcoordR) * tempx + cos(-TexcoordR) * tempy + 0.5 + TexcoordY;
 	glTexCoord2d(Nx, Ny); glVertex2d(1, 1);
 	tempx = 0 - 0.5;
 	tempy = 0 - 0.5;
-	Nx = cos(-textureR) * tempx - sin(-textureR) * tempy + 0.5 - textureU;
-	Ny = sin(-textureR) * tempx + cos(-textureR) * tempy + 0.5 + textureV;
+	Nx = cos(-TexcoordR) * tempx - sin(-TexcoordR) * tempy + 0.5 - TexcoordX;
+	Ny = sin(-TexcoordR) * tempx + cos(-TexcoordR) * tempy + 0.5 + TexcoordY;
 	glTexCoord2d(Nx, Ny); glVertex2d(0, 1);
 	glEnd();
 
@@ -429,7 +432,6 @@ void RenderAll()
 {
 	RenderMeshWindow();
 }
-
 
 //Timer event
 void My_Timer(int val)
@@ -472,16 +474,32 @@ void SelectionHandler(unsigned int x, unsigned int y)
 		{
 			model.AddSelectedFace(faceID - 1);
 
+			unsigned int ring = 10;
+
+			vector<unsigned int>new_selectedFace;
+			vector<unsigned int>tmp_selectedFace;
+			new_selectedFace.clear();
+			tmp_selectedFace.clear();
+			new_selectedFace.push_back(faceID - 1);
+			tmp_selectedFace.push_back(faceID - 1);
+
 			MyMesh::FaceHandle face_handle = model.model.mesh.face_handle(faceID - 1);
-			MyMesh::FFIter face_face_it = model.model.mesh.ff_begin(face_handle);
-			for (; face_face_it != model.model.mesh.ff_end(face_handle); ++face_face_it)
+
+			for (int i = 0; i < ring; ++i)
 			{
-				model.AddSelectedFace(face_face_it->idx());
-				MyMesh::FaceHandle tmp_face_handle = model.model.mesh.face_handle(face_face_it->idx());
-				MyMesh::FFIter tmp_face_face_it = model.model.mesh.ff_begin(tmp_face_handle);
-				for (; tmp_face_face_it != model.model.mesh.ff_end(tmp_face_handle); ++tmp_face_face_it)
-					model.AddSelectedFace(tmp_face_face_it->idx());
+				for (int j = 0; j < tmp_selectedFace.size(); ++j)
+				{
+					face_handle = model.model.mesh.face_handle(tmp_selectedFace[j]);
+					for (MyMesh::FFIter face_face_it = model.model.mesh.ff_begin(face_handle); face_face_it != model.model.mesh.ff_end(face_handle); ++face_face_it)
+						if (std::find(new_selectedFace.begin(), new_selectedFace.end(), face_face_it->idx()) == new_selectedFace.end() &&
+							face_face_it->idx() >= 0 && face_face_it->idx() < model.model.mesh.n_faces())
+							new_selectedFace.push_back(face_face_it->idx());
+				}
+				tmp_selectedFace = new_selectedFace;
 			}
+
+			for (int i = 0; i < new_selectedFace.size(); ++i)
+				model.AddSelectedFace(new_selectedFace[i]);
 		}
 	}
 }
@@ -508,8 +526,6 @@ void MyMouse(int button, int state, int x, int y)
 	}
 }
 
-#define PI 3.1415936
-
 double countAngle(MyMesh::Point from, MyMesh::Point to, MyMesh::Point p)
 {
 	double vec1_x = from[0] - p[0];
@@ -530,9 +546,11 @@ double countAngle(MyMesh::Point from, MyMesh::Point to, MyMesh::Point p)
 
 	return angle;
 }
+//OpenMesh::VPropHandleT<unsigned int> id;
 
 void Texture()
 {
+	model.model.mesh.request_vertex_texcoords2D();
 	model.FaceToVertex(); // change selected face to vertex
 
 	vector< MyMesh::VertexHandle> vHandle;
@@ -541,15 +559,17 @@ void Texture()
 	for (int i = 0; i < model.GetSelectedVertexSize(); ++i)
 	{
 		MyMesh::VertexHandle vertex_handle = model.model.mesh.vertex_handle(model.GetSelectedVertexID(i));
-		cout << "Veretx handle: " << vertex_handle << endl;
+		//cout << "Veretx handle: " << vertex_handle << endl;
 		MyMesh::Point p = model.model.mesh.point(vertex_handle);
 
 		vHandle.push_back(SelectedModel.model.mesh.add_vertex(p));
+		SelectedModel.model.mesh.ids.push_back(model.GetSelectedVertexID(i));
+
 	}
 
 	//cout << vHandle.size() << endl;
 
-	vector<MyMesh::VertexHandle> face_vHandle;
+	vector<MyMesh::VertexHandle> face_vHandle;	
 	
 	// add selected mesh face to new mesh
 	for (int i = 0; i < model.vertexSequence.size() / 3; i++)
@@ -557,7 +577,7 @@ void Texture()
 		face_vHandle.clear();
 		face_vHandle.push_back(vHandle[model.vertexSequence[i * 3]]);
 		face_vHandle.push_back(vHandle[model.vertexSequence[i * 3 + 1]]);
-		face_vHandle.push_back(vHandle[model.vertexSequence[i * 3 + 2]]);
+		face_vHandle.push_back(vHandle[model.vertexSequence[i * 3 + 2]]);		
 		SelectedModel.model.mesh.add_face(face_vHandle);
 	}
 	
@@ -755,9 +775,7 @@ void Texture()
 			SelectedModel.model.TexCoord = true;
 			SelectedModel.model.LoadToShader();
 		}
-	}	
-
-	//cout << SelectedModel.model.mesh.n_vertices() << endl;
+	}
 }
 
 void delete_Texture()
@@ -776,7 +794,6 @@ void RenderAllTextures()
 	for (int i = 0; i < textures.size(); ++i)
 	{
 		glBindVertexArray(textures[i].vao);
-		//cout << "render vao: " << &textures[i].vao << endl;
 		glDrawElements(GL_TRIANGLES, textures[i].mesh.model.mesh.n_faces() * 3, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}	
@@ -790,33 +807,67 @@ void MyKeyboard(unsigned char key, int x, int y)
 		meshWindowCam.keyEvents(key);
 	}
 
-	if (key == 'f')
+	TEXTURE tmp;
+
+	//OpenMesh::VPropHandleT<unsigned int> id;
+	MyMesh::VertexIter vertices_it;
+
+	switch (key)
 	{
+	case 'f':
 		SelectedModel.model.mesh.clear();
 		SelectedModel.model.mesh.ClearMesh();
-		//cout << "Mesh face: " << SelectedModel.model.mesh.n_faces() << endl;
+		SelectedModel.model.mesh.ids.clear();
+		//model.PrintSelectedFaceID();
 		Texture();
-		TEXTURE tmp(textureID, SelectedModel);
-		textures.push_back(tmp);
-		//model.model.SaveToVector(textureID, SelectedModel.model.mesh);
+		tmp.add(textureID[selectionTex], SelectedModel);
+		cout << SelectedModel.model.mesh.n_faces() << endl;
+		if (SelectedModel.model.mesh.n_faces() != 0)
+			textures.push_back(tmp);
 		model.ClearSelectedFace();
 		model.ClearSelectedVertex();
 		model.ClearVertexSequence();
-		//RenderAllTextures();
-
-		cout << textures.size() << endl;
-		cout << textures[textures.size() - 1].vao << endl;
-		for (int i = 0; i < textures.size(); ++i) {
-			cout << "Face Count: " << textures[i].mesh.model.mesh.n_faces() << endl;
-		}
-	}
-
-	if (key == 'g')
-	{
+		break;
+	case 'g':
 		delete_Texture();
+		break;
+	case 'q':
+		for (int i = 0; i < textures.size(); ++i)
+		{
+			file.AddData(textures[i].texture_id, textures[i].mesh.model.mesh.n_faces(), textures[i].mesh.model.mesh);
+		}
+
+		file.SaveJSON();
+		file.Clear();
+		break;
+	case 'e':
+		file.LoadJSON();
+		break;
+	case 'r':
+		TexcoordR += 0.01;
+		break;
+	case 'j':
+		TexcoordX += 0.01;
+		break;
+	case 'l':
+		TexcoordX -= 0.01;
+		break;
+	case 'i':
+		TexcoordY += 0.01;
+		break;
+	case 'k':
+		TexcoordY -= 0.01;
+		break;
+	case 'n':
+		TexcoordS += 1;
+		break;
+	case 'm':
+		TexcoordS -= 1;
+		if (TexcoordS < 0)
+			TexcoordS = 1;
+		break;
 	}
 }
-
 
 void MyMouseMoving(int x, int y) {
 	if (!TwEventMouseMotionGLUT(x, y))

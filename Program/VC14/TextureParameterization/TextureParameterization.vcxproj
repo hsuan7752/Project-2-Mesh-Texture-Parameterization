@@ -133,6 +133,7 @@
     <ClInclude Include="..\..\Source\TextureParameterization\DrawModelShader.h" />
     <ClInclude Include="..\..\Source\TextureParameterization\DrawPickingFaceShader.h" />
     <ClInclude Include="..\..\Source\TextureParameterization\DrawPointShader.h" />
+    <ClInclude Include="..\..\Source\TextureParameterization\json.hpp" />
     <ClInclude Include="..\..\Source\TextureParameterization\PickingShader.h" />
     <ClInclude Include="..\..\Source\TextureParameterization\PickingTexture.h" />
     <ClInclude Include="..\..\Source\TextureParameterization\MeshObject.h" />

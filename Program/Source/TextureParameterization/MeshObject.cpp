@@ -175,6 +175,12 @@ void GLMesh::LoadToShader()
 
 void GLMesh::LoadToShader(GLuint& _vao, GLuint& _ebo, GLuint& _vboVertices, GLuint& _vboNormal, GLuint& _vboTexcoord)
 {
+
+	mesh.request_face_normals();
+	mesh.request_vertex_normals();
+	mesh.update_face_normals();
+	mesh.update_vertex_normals();
+
 	std::vector<MyMesh::Point> vertices;
 	vertices.reserve(mesh.n_vertices());
 	for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
@@ -192,15 +198,16 @@ void GLMesh::LoadToShader(GLuint& _vao, GLuint& _ebo, GLuint& _vboVertices, GLui
 	}
 
 	std::vector<MyMesh::TexCoord2D> texcoods;
-	if (TexCoord)
-	{
+	//if (TexCoord)
+	//{
 		texcoods.reserve(mesh.n_vertices());
 		for (MyMesh::VertexIter v_it = mesh.vertices_begin(); v_it != mesh.vertices_end(); ++v_it)
 		{
 			MyMesh::TexCoord2D Mytex = mesh.texcoord2D(*v_it);
 			texcoods.push_back(Mytex);
+			//std::cout << "texcoord: " << Mytex << std::endl;
 		}
-	}
+	//}
 
 	std::vector<unsigned int> indices;
 	indices.reserve(mesh.n_faces() * 3);
@@ -228,14 +235,14 @@ void GLMesh::LoadToShader(GLuint& _vao, GLuint& _ebo, GLuint& _vboVertices, GLui
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(1);
 
-	if (TexCoord)
-	{
+	//if (TexCoord)
+	//{
 		glGenBuffers(1, &vbotex);
 		glBindBuffer(GL_ARRAY_BUFFER, vbotex);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(MyMesh::TexCoord2D) * texcoods.size(), &texcoods[0], GL_STATIC_DRAW);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 		glEnableVertexAttribArray(2);
-	}
+	//}
 
 	glGenBuffers(1, &ebotest);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebotest);

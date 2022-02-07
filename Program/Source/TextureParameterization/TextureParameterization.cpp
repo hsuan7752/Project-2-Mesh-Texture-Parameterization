@@ -63,12 +63,10 @@ enum SelectionMode
 enum SelectionTexture
 {
 	TIGER,
-	CHEETAH,
-	BRICK,
-	BLUE,
 	NTUST,
 	CHECKERBOARD,
-	BRICK2
+	BRICK2,
+	TIGER2
 };
 
 SelectionMode selectionMode = ADD_FACE;
@@ -76,7 +74,7 @@ SelectionTexture selectionTex = TIGER;
 
 TwBar* bar;
 TwEnumVal SelectionModeEV[] = { {ADD_FACE, "Add face"}, {DEL_FACE, "Delete face"}, {SELECT_POINT, "Point"}, {ADD_RING, "Add ring"}};
-TwEnumVal SelectionTexEV[] = { {TIGER, "Texture1"}, {CHEETAH, "Texture2"},  {BRICK, "Texture3"}, {BLUE, "Texture4"}, {NTUST, "Texture5"}, {CHECKERBOARD, "Texture6"}, {BRICK2, "Texture7"} };
+TwEnumVal SelectionTexEV[] = { {TIGER, "Texture1"}, {NTUST, "Texture2"}, {CHECKERBOARD, "Texture3"}, {BRICK2, "Texture4"}, {TIGER2, "Texture5"}};
 TwType SelectionModeType;
 TwType SelectionTexType;
 
@@ -104,7 +102,7 @@ void SetupGUI()
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionMode", SelectionModeType, &selectionMode, NULL);
 
-	SelectionTexType = TwDefineEnum("SelectionTexType", SelectionTexEV, 7);
+	SelectionTexType = TwDefineEnum("SelectionTexType", SelectionTexEV, 5);
 	// Adding season to bar
 	TwAddVarRW(bar, "SelectionTexType", SelectionTexType, &selectionTex, NULL);
 }
@@ -194,12 +192,10 @@ void InitData()
 	My_LoadModel();
 
 	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\tiger.png", GL_RGB));
-	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\cheetah.jfif", GL_RGB));
-	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\brick.jfif", GL_RGB));
-	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\images.jfif", GL_RGB));
 	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\NTUST.jpg", GL_RGB));
 	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\checkerboard4.jpg", GL_RGB));
 	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\brick.jpg", GL_RGB));
+	textureID.push_back(My_LoadTexture("Imgs\\TextureParameterization\\tiger.jpg", GL_RGB));
 }
 
 void Reshape(int width, int height)
@@ -272,7 +268,8 @@ void RenderMeshWindow()
 	
 		drawModelShader.DrawTexCoord(false);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textures[i].texture_id);
+		glBindTexture(GL_TEXTURE_2D, textures[i].texture_id); 
+		//std::cout << "Texture id: " << textures[i].texture_id << std::endl;
 	
 		drawModelShader.DrawTexture(true);
 		drawModelShader.DrawWireframe(false);
@@ -774,7 +771,7 @@ void Texture()
 			SelectedModel.model.mesh.release_face_normals();
 
 			SelectedModel.model.TexCoord = true;
-			SelectedModel.model.LoadToShader();
+			//SelectedModel.model.LoadToShader();
 		}
 	}
 
@@ -875,8 +872,43 @@ void MyKeyboard(unsigned char key, int x, int y)
 			}
 
 			file.buildMesh(id, sequence, texcoord, model, mesh);
+			mesh.ids = id;
+			mesh.vertexSequence = sequence;
+			mesh.texcoordX = texcoordX;
+			mesh.texcoordY = texcoordY;
 			tmp.add(file.datas[i].getJson()["textureID"], mesh);
 			textures.push_back(tmp);
+
+
+
+
+			/*glBegin(GL_POINTS);
+			glColor3f(0, 1, 0);
+			glPointSize(100);
+
+			for (MyMesh::VertexIter vertex_it = mesh.vertices_begin(); vertex_it != mesh.vertices_end(); ++vertex_it)
+			{
+				MyMesh::VHandle DrawPoint1 = mesh.vertex_handle(vertex_it->idx());
+				MyMesh::TexCoord2D outPoint1_p = mesh.texcoord2D(DrawPoint1);
+				glVertex3f(outPoint1_p[0], outPoint1_p[1] * 2 - 1, 0);
+			}
+			glEnd();*/
+
+			glBegin(GL_LINES);
+			glColor3f(1, 0, 0);
+			glLineWidth(10);
+			for (MyMesh::EdgeIter edge_it = mesh.edges_begin(); edge_it != mesh.edges_end(); ++edge_it)
+			{
+				MyMesh::EdgeHandle edge_handle = mesh.edge_handle(edge_it->idx());
+				MyMesh::HalfedgeHandle halfedge_handle = mesh.halfedge_handle(edge_handle, 0);
+				MyMesh::VHandle DrawPoint1 = mesh.from_vertex_handle(halfedge_handle);
+				MyMesh::VHandle DrawPoint2 = mesh.to_vertex_handle(halfedge_handle);
+				MyMesh::TexCoord2D outPoint1_p = mesh.texcoord2D(DrawPoint1);
+				MyMesh::TexCoord2D outPoint2_p = mesh.texcoord2D(DrawPoint2);
+				glVertex3f(outPoint1_p[0], outPoint1_p[1] * 2 - 1, 0);
+				glVertex3f(outPoint2_p[0], outPoint2_p[1] * 2 - 1, 0);
+			}
+			glEnd();/**/
 		}
 		break;
 	case 'r':

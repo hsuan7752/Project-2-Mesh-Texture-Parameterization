@@ -101,6 +101,7 @@ public:
 	void add(unsigned int _texture_id, MyMesh _mesh);
 	unsigned int texture_id = 0;
 
+
 	MeshObject mesh;
 	GLuint vao;
 	GLuint ebo;

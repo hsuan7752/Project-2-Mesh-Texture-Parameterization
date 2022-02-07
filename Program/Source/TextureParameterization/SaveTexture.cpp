@@ -95,9 +95,6 @@ void DataBase::LoadJSON(MeshObject model)
 
 void DataBase::buildMesh(vector<unsigned int> vertices_id, vector<unsigned int> sequence, vector< MyMesh::TexCoord2D > texcoord, MeshObject model, MyMesh &mesh)
 {
-    cout << texcoord.size() << endl;
-    cout << vertices_id.size() << endl;
-
     mesh.request_vertex_texcoords2D();
 
     vector< MyMesh::VertexHandle> vHandle;

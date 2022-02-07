@@ -16,6 +16,9 @@ public:
 	int FindVertex(MyMesh::Point pointToFind);
 	void ClearMesh();
 	std::vector<unsigned int> ids;
+	std::vector<float> texcoordX;
+	std::vector<float> texcoordY;
+	std::vector<unsigned int> vertexSequence;
 };
 
 class GLMesh
@@ -76,7 +79,7 @@ public:
 	void ClearSelectedVertex();
 	void ClearVertexSequence();
 
-	std::vector<unsigned int> vertexSequence;
+	
 
 	GLMesh model;
 
@@ -94,8 +97,8 @@ public:
 	TEXTURE() {}
 	TEXTURE(unsigned int _texture_id, MeshObject _mesh);
 	TEXTURE(unsigned int _texture_id, MeshObject _mesh, GLuint _vao, GLuint _ebo, GLuint _vboVertices, GLuint _vboNormal, GLuint _vboTexcoord);
-	TEXTURE(unsigned int _texture_id, std::vector<unsigned int> _vertices_ids);
 	void add(unsigned int _texture_id, MeshObject _mesh);
+	void add(unsigned int _texture_id, MyMesh _mesh);
 	unsigned int texture_id = 0;
 
 	MeshObject mesh;

@@ -564,20 +564,21 @@ void Texture()
 
 		vHandle.push_back(SelectedModel.model.mesh.add_vertex(p));
 		SelectedModel.model.mesh.ids.push_back(model.GetSelectedVertexID(i));
-
 	}
+
+	SelectedModel.model.mesh.vertexSequence = model.model.mesh.vertexSequence;
 
 	//cout << vHandle.size() << endl;
 
 	vector<MyMesh::VertexHandle> face_vHandle;	
 	
 	// add selected mesh face to new mesh
-	for (int i = 0; i < model.vertexSequence.size() / 3; i++)
+	for (int i = 0; i < model.model.mesh.vertexSequence.size() / 3; i++)
 	{
 		face_vHandle.clear();
-		face_vHandle.push_back(vHandle[model.vertexSequence[i * 3]]);
-		face_vHandle.push_back(vHandle[model.vertexSequence[i * 3 + 1]]);
-		face_vHandle.push_back(vHandle[model.vertexSequence[i * 3 + 2]]);		
+		face_vHandle.push_back(vHandle[model.model.mesh.vertexSequence[i * 3]]);
+		face_vHandle.push_back(vHandle[model.model.mesh.vertexSequence[i * 3 + 1]]);
+		face_vHandle.push_back(vHandle[model.model.mesh.vertexSequence[i * 3 + 2]]);
 		SelectedModel.model.mesh.add_face(face_vHandle);
 	}
 	
@@ -776,6 +777,14 @@ void Texture()
 			SelectedModel.model.LoadToShader();
 		}
 	}
+
+	MyMesh::VertexIter vertex_it = SelectedModel.model.mesh.vertices_begin();
+	for (; vertex_it != SelectedModel.model.mesh.vertices_end(); ++vertex_it)
+	{
+		MyMesh::VertexHandle vertex_handle = SelectedModel.model.mesh.vertex_handle(vertex_it->idx());
+		SelectedModel.model.mesh.texcoordX.push_back(SelectedModel.model.mesh.texcoord2D(vertex_handle)[0]);
+		SelectedModel.model.mesh.texcoordY.push_back(SelectedModel.model.mesh.texcoord2D(vertex_handle)[1]);
+	}
 }
 
 void delete_Texture()
@@ -818,10 +827,13 @@ void MyKeyboard(unsigned char key, int x, int y)
 		SelectedModel.model.mesh.clear();
 		SelectedModel.model.mesh.ClearMesh();
 		SelectedModel.model.mesh.ids.clear();
-		//model.PrintSelectedFaceID();
+		SelectedModel.model.mesh.texcoordX.clear();
+		SelectedModel.model.mesh.texcoordY.clear();
+		SelectedModel.model.mesh.vertexSequence.clear();
+
 		Texture();
 		tmp.add(textureID[selectionTex], SelectedModel);
-		cout << SelectedModel.model.mesh.n_faces() << endl;
+
 		if (SelectedModel.model.mesh.n_faces() != 0)
 			textures.push_back(tmp);
 		model.ClearSelectedFace();
@@ -841,7 +853,31 @@ void MyKeyboard(unsigned char key, int x, int y)
 		file.Clear();
 		break;
 	case 'e':
-		file.LoadJSON();
+		file.LoadJSON(model);
+		for (int i = 0; i < file.GetDataSetSize(); ++i)
+		{
+			//cout << file.datas[i].getJson()["mesh n_faces"] << endl;
+			MyMesh mesh;
+
+			vector<unsigned int> id = file.datas[i].getJson()["id"].get<vector<unsigned int>>();
+			vector<unsigned int> sequence = file.datas[i].getJson()["sequence"].get <vector<unsigned int>>();
+			vector< float > texcoordX = file.datas[i].getJson()["texcoordX"].get<vector< float>>();
+			vector< float > texcoordY = file.datas[i].getJson()["texcoordY"].get<vector< float>>();
+
+			vector< MyMesh::TexCoord2D> texcoord;
+
+			for (int j = 0; j < texcoordX.size(); ++j)
+			{
+				MyMesh::TexCoord2D tex;
+				tex[0] = texcoordX[j];
+				tex[1] = texcoordY[j];
+				texcoord.push_back(tex);
+			}
+
+			file.buildMesh(id, sequence, texcoord, model, mesh);
+			tmp.add(file.datas[i].getJson()["textureID"], mesh);
+			textures.push_back(tmp);
+		}
 		break;
 	case 'r':
 		TexcoordR += 0.01;

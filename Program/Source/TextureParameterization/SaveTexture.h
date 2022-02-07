@@ -31,7 +31,11 @@ public:
 	void AddData(unsigned int textureID, size_t mesh_n, MyMesh mesh);
 	void Clear();
 	void SaveJSON();
-	void LoadJSON();
-private:
+	void LoadJSON(MeshObject model);
+	void buildMesh(vector<unsigned int> _vertices_id, vector<unsigned int> sequence, vector< MyMesh::TexCoord2D > texcoord, MeshObject model, MyMesh &mesh);
+	int GetDataSetSize();
+	unsigned int GetDataTextureID(int index);
+
+//private:
 	vector < JSON > datas;
 };

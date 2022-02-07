@@ -3,8 +3,11 @@
 JSON::JSON(unsigned int textureID, size_t mesh_n, MyMesh mesh)
 {
     j["textureID"] = textureID;
-    j["mesh n_faces"] = mesh_n;
-    j["mesh vertices id"] = mesh.ids;
+    j["n_faces"] = mesh_n;
+    j["id"] = mesh.ids;
+    j["sequence"] = mesh.vertexSequence;
+    j["texcoordX"] = mesh.texcoordX;
+    j["texcoordY"] = mesh.texcoordY;
 }
 
 json JSON::getJson()
@@ -44,7 +47,7 @@ void DataBase::SaveJSON()
     outFile.close();
 }
 
-void DataBase::LoadJSON()
+void DataBase::LoadJSON(MeshObject model)
 {
     ifstream inFile;
     inFile.open("Mesh.json", ios::in);
@@ -60,14 +63,78 @@ void DataBase::LoadJSON()
     while (inFile.peek() != EOF)
     {
         inFile >> j;
-        //j = json::parse(inFile);
-        cout << j["textureID"] << endl;
-        cout << j["mesh n_faces"] << endl;
-        vector<unsigned int> t =  j["mesh vertices id"].get<vector<unsigned int>>();
-        for (int i = 0; i < t.size(); ++i)
-            cout << t[i] << endl;
+        //cout << j["textureID"] << endl;
+        //cout << j["mesh n_faces"] << endl;
+        //cout << j["texcoord"] << endl;
+        vector<unsigned int> id =  j["id"].get<vector<unsigned int>>();
+        vector<unsigned int> sequence = j["sequence"].get <vector<unsigned int>>();
+        vector< float > texcoordX = j["texcoordX"].get<vector< float>>();
+        vector< float > texcoordY = j["texcoordY"].get<vector< float>>();
 
-        TEXTURE textures(j["textureID"], t);
+        vector< MyMesh::TexCoord2D> texcoord;
+
+        for (int i = 0; i < texcoordX.size(); ++i)
+        {
+            MyMesh::TexCoord2D tex;
+            tex[0] = texcoordX[i];
+            tex[1] = texcoordY[i];
+            texcoord.push_back(tex);
+        }       
+
+        MyMesh mesh;
+        buildMesh(id, sequence, texcoord, model, mesh);
+        mesh.ids = id;
+        mesh.vertexSequence = sequence;
+        mesh.texcoordX = texcoordX;
+        mesh.texcoordY = texcoordY;
+        JSON J(j["textureID"], mesh.n_faces(), mesh);
+        datas.emplace_back(J);
     }
     inFile.close();
+}
+
+void DataBase::buildMesh(vector<unsigned int> vertices_id, vector<unsigned int> sequence, vector< MyMesh::TexCoord2D > texcoord, MeshObject model, MyMesh &mesh)
+{
+    cout << texcoord.size() << endl;
+    cout << vertices_id.size() << endl;
+
+    mesh.request_vertex_texcoords2D();
+
+    vector< MyMesh::VertexHandle> vHandle;
+
+    // add selected mesh vertex to new mesh
+    for (int i = 0; i < vertices_id.size(); ++i)
+    {
+        MyMesh::VertexHandle vertex_handle = model.model.mesh.vertex_handle(vertices_id[i]);
+        MyMesh::Point p = model.model.mesh.point(vertex_handle);
+
+        //mesh.set_texcoord2D(p, texcoord[i]);
+
+        vHandle.push_back(mesh.add_vertex(p));
+        mesh.set_texcoord2D(vHandle[vHandle.size() -1], texcoord[i]);
+    }
+
+    vector<MyMesh::VertexHandle> face_vHandle;
+
+    // add selected mesh face to new mesh
+    for (int i = 0; i < sequence.size() / 3; i++)
+    {
+        face_vHandle.clear();
+        face_vHandle.push_back(vHandle[sequence[i * 3]]);
+        face_vHandle.push_back(vHandle[sequence[i * 3 + 1]]);
+        face_vHandle.push_back(vHandle[sequence[i * 3 + 2]]);
+        mesh.add_face(face_vHandle);
+    }
+
+
+}
+
+int DataBase::GetDataSetSize()
+{
+    return datas.size();
+}
+
+unsigned int DataBase::GetDataTextureID(int index)
+{
+    return datas.at(index).getJson();
 }

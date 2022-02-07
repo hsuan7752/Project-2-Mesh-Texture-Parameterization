@@ -420,8 +420,8 @@ void MeshObject::PrintSelectedVertexID()
 
 void MeshObject::PrintVertexSequence()
 {
-	for (int i = 0; i < vertexSequence.size(); ++i)
-		std::cout << vertexSequence[i] << std::endl;
+	for (int i = 0; i < model.mesh.vertexSequence.size(); ++i)
+		std::cout << model.mesh.vertexSequence[i] << std::endl;
 }
 
 unsigned int MeshObject::GetSelectedFaceID(unsigned int index)
@@ -451,7 +451,7 @@ void MeshObject::FaceToVertex()
 		{
 			vertex_handle = *face_vertex_it;
 			if (AddSelectedVertex(vertex_handle.idx()))
-				vertexSequence.push_back(j);
+				model.mesh.vertexSequence.push_back(j);
 			else
 			{
 				std::vector<unsigned int>::iterator it = std::find(selectedVertex.begin(), selectedVertex.end(), vertex_handle.idx());
@@ -459,7 +459,7 @@ void MeshObject::FaceToVertex()
 				int k = 0;
 
 				for (; *tmp != vertex_handle.idx(); ++k, ++tmp);
-				vertexSequence.push_back(k);
+				model.mesh.vertexSequence.push_back(k);
 				--j;
 			}
 		}
@@ -478,7 +478,7 @@ void MeshObject::ClearSelectedVertex()
 
 void MeshObject::ClearVertexSequence()
 {
-	vertexSequence.clear();
+	model.mesh.vertexSequence.clear();
 }
 
 TEXTURE::TEXTURE(unsigned int _texture_id, MeshObject _mesh)
@@ -506,7 +506,11 @@ void TEXTURE::add(unsigned int _texture_id, MeshObject _mesh)
 	_mesh.model.LoadToShader(vao, ebo, vboVertices, vboNormal, vboTexcoord);
 }
 
-TEXTURE::TEXTURE(unsigned int _texture_id, std::vector<unsigned int> _vertices_ids)
+void TEXTURE::add(unsigned int _texture_id, MyMesh _mesh)
 {
+	GLMesh m;
+	m.mesh = _mesh;
 	this->texture_id = _texture_id;
+	this->mesh.model.mesh = _mesh;
+	m.LoadToShader(vao, ebo, vboVertices, vboNormal, vboTexcoord);
 }
